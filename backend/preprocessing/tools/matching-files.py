@@ -3,9 +3,9 @@ import shutil
 from tqdm import tqdm
 
 # === KONFIGURASI INPUT & OUTPUT ===
-images_input = "preprocessing/data/output/images"
-labels_input = "preprocessing/data/output/labels"
-output_match_dir = "preprocessing/data/output/matched"
+images_input = "backend/preprocessing/data/output/images"
+labels_input = "backend/preprocessing/data/output/labels"
+output_match_dir = "backend/preprocessing/data/output/matched"
 
 # Buat folder output
 images_output = os.path.join(output_match_dir, "images")

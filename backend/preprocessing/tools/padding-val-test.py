@@ -5,12 +5,12 @@ from pathlib import Path
 from tqdm import tqdm
 
 # === PATH DASAR ===
-base_dir = Path("training/datasets")
+base_dir = Path("backend/training/datasets")
 image_dirs = [base_dir / "images" / "val", base_dir / "images" / "test"]
 label_dirs = [base_dir / "labels" / "val", base_dir / "labels" / "test"]
 
 # Output baru
-output_base = Path("training/datasets/padding")
+output_base = Path("backend/training/datasets/padding")
 output_dirs = [output_base / "val", output_base / "test"]
 
 # Buat folder output

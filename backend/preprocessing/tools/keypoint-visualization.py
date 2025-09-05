@@ -4,9 +4,9 @@ import glob
 import random
 
 # Path direktori
-img_dir = "preprocessing/data/output/images"
-label_dir = "preprocessing/data/output/labels"
-output_dir = "preprocessing/data/output/visualization"
+img_dir = "backend/preprocessing/data/output/images"
+label_dir = "backend/preprocessing/data/output/labels"
+output_dir = "backend/preprocessing/data/output/visualization"
 
 os.makedirs(output_dir, exist_ok=True)
 

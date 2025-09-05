@@ -2,7 +2,7 @@ import os
 from collections import defaultdict
 
 # Path ke folder label
-base_dir = "training/datasets"
+base_dir = "backend/training/datasets"
 splits = ['train', 'val', 'test']
 
 # Inisialisasi counter untuk setiap class
