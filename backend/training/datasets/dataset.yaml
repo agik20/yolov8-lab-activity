@@ -1,0 +1,27 @@
+path: backend/training/datasets
+train: images/train
+val: images/val
+test: images/test
+
+kpt_shape: [13, 3]
+
+names:
+  0: normal
+  1: sleep
+  2: eat_drink
+
+# ===== Augmentation =====
+hsv_h: 0.015
+hsv_s: 0.5
+hsv_v: 0.3
+
+degrees: 5.0       
+translate: 0.05    
+scale: 0.1         
+shear: 0.0         
+perspective: 0.0005
+
+flipud: 0.0
+fliplr: 0.5
+mosaic: 0.2
+mixup: 0.0
