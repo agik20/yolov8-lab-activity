@@ -51,9 +51,9 @@ class Config:
     FRAME_SAVE_INTERVAL = 15
 
     POSE_COLORS = {
-        "no cheating": (0, 255, 0),
-        "provide object": (255, 0, 0),
-        "see friends work": (0, 255, 255)
+        "normal": (0, 255, 0),
+        "sleep": (255, 0, 0),
+        "eat and drink": (0, 255, 255)
     }
     OBJECT_COLORS = {
         "smartphone": (0, 0, 255),
