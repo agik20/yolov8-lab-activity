@@ -9,7 +9,6 @@ from flask import Flask, Response, render_template_string
 import threading
 import queue
 import csv
-import math
 
 # ========== CONFIGURATION ==========
 class Config:
@@ -50,9 +49,6 @@ class Config:
     REQUIRED_DETECTION_TIME = 5
 
     FRAME_SAVE_INTERVAL = 15
-    
-    # Crowd detection parameters
-    CROWD_DISTANCE_THRESHOLD = 100
 
     POSE_COLORS = {
         "normal": (0, 255, 0),
@@ -159,7 +155,6 @@ def apply_nms(boxes, scores, iou_threshold):
         indices = indices[remaining_indices + 1]
     
     return keep
-
 # ========== DETECTION PIPELINE ==========
 class CheatingDetectionPipeline:
     def __init__(self, config):
@@ -295,16 +290,18 @@ class CheatingDetectionPipeline:
         results = self.pose_model.track(
             source=frame, 
             conf=self.config.CONF_THRESH_POSE, 
-            iou=self.config.NMS_IOU_THRESHOLD,
+            iou=self.config.NMS_IOU_THRESHOLD,  # Use our NMS threshold
             persist=True, 
             imgsz=640
         )
         
         boxes = results[0].boxes
-        centers = []  # Menyimpan pusat setiap orang untuk deteksi kerumunan
-
         if boxes is not None and boxes.id is not None and boxes.cls is not None:
-            all_boxes, all_scores, all_cls, all_ids = [], [], [], []
+            # Prepare data for NMS
+            all_boxes = []
+            all_scores = []
+            all_cls = []
+            all_ids = []
             
             for box, cls_id, track_id, conf in zip(boxes.xyxy, boxes.cls, boxes.id, boxes.conf):
                 all_boxes.append(box.tolist())
@@ -312,9 +309,15 @@ class CheatingDetectionPipeline:
                 all_cls.append(int(cls_id))
                 all_ids.append(int(track_id))
             
+            # Apply NMS
             if len(all_boxes) > 0:
-                keep_indices = apply_nms(all_boxes, all_scores, self.config.NMS_IOU_THRESHOLD)
+                keep_indices = apply_nms(
+                    all_boxes, 
+                    all_scores, 
+                    self.config.NMS_IOU_THRESHOLD
+                )
                 
+                # Process only the kept detections
                 for idx in keep_indices:
                     box = all_boxes[idx]
                     cls_id = all_cls[idx]
@@ -324,11 +327,6 @@ class CheatingDetectionPipeline:
                     class_name = self.pose_class_map.get(cls_id, f"unknown_{cls_id}")
                     color = self.config.POSE_COLORS.get(class_name, (255, 255, 255))
                     x1, y1, x2, y2 = map(int, box)
-                    
-                    # Simpan pusat bounding box untuk kerumunan
-                    cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
-                    centers.append((cx, cy))
-                    
                     dx1, dy1, dx2, dy2 = expand_crop(x1, y1, x2, y2, img_w, img_h, self.config.DISPLAY_CROP_SCALE)
                     cv2.rectangle(annotated, (dx1, dy1), (dx2, dy2), color, self.config.POSE_BOX_THICKNESS)
                     label = f"ID:{track_id} {class_name} {conf:.2f}"
@@ -339,24 +337,24 @@ class CheatingDetectionPipeline:
                         self.process_detection(track_id, class_name, x1, y1, x2, y2, frame, current_time, timestamp,
                                                img_w, img_h, self.id_info_pose, self.config.POSE_COOLDOWN,
                                                self.config.OUTPUT_POSE_BASE, "pose", log_file, conf, self.config.POSE_SAVE_CROP_SCALE)
-        
-        # Deteksi kerumunan
-        self.detect_crowd(annotated, centers, log_file)
-        
         return annotated
 
     def detect_objects(self, annotated, frame, current_time, timestamp, img_w, img_h, log_file):
         results = self.object_model.track(
             source=frame, 
             conf=self.config.CONF_THRESH_OBJ, 
-            iou=self.config.NMS_IOU_THRESHOLD,
+            iou=self.config.NMS_IOU_THRESHOLD,  # Use our NMS threshold
             persist=True, 
             imgsz=640
         )
         
         boxes = results[0].boxes
         if boxes is not None and boxes.id is not None:
-            all_boxes, all_scores, all_cls, all_ids = [], [], [], []
+            # Prepare data for NMS
+            all_boxes = []
+            all_scores = []
+            all_cls = []
+            all_ids = []
             
             for box, cls_id, track_id, conf in zip(boxes.xyxy, boxes.cls, boxes.id, boxes.conf):
                 all_boxes.append(box.tolist())
@@ -364,9 +362,15 @@ class CheatingDetectionPipeline:
                 all_cls.append(int(cls_id))
                 all_ids.append(int(track_id))
             
+            # Apply NMS
             if len(all_boxes) > 0:
-                keep_indices = apply_nms(all_boxes, all_scores, self.config.NMS_IOU_THRESHOLD)
+                keep_indices = apply_nms(
+                    all_boxes, 
+                    all_scores, 
+                    self.config.NMS_IOU_THRESHOLD,
+                )
                 
+                # Process only the kept detections
                 for idx in keep_indices:
                     box = all_boxes[idx]
                     cls_id = all_cls[idx]
@@ -386,53 +390,6 @@ class CheatingDetectionPipeline:
                                                img_w, img_h, self.id_info_obj, self.config.OBJECT_COOLDOWN,
                                                self.config.OUTPUT_OBJ_BASE, "object", log_file, conf, self.config.OBJ_SAVE_CROP_SCALE)
         return annotated
-
-    def detect_crowd(self, annotated, centers, log_file, distance_thresh=None):
-        """Detect cluster > 3 orang berdekatan"""
-        if distance_thresh is None:
-            distance_thresh = self.config.CROWD_DISTANCE_THRESHOLD
-            
-        n = len(centers)
-        if n < 3:
-            return  # tidak mungkin kerumunan
-
-        visited = [False] * n
-        clusters = []
-
-        for i in range(n):
-            if visited[i]:
-                continue
-            cluster = [i]
-            visited[i] = True
-            for j in range(i+1, n):
-                if not visited[j]:
-                    dist = math.dist(centers[i], centers[j])
-                    if dist < distance_thresh:  # dekat
-                        cluster.append(j)
-                        visited[j] = True
-            clusters.append(cluster)
-
-        # Cek cluster size
-        crowd_detected = False
-        for cluster in clusters:
-            if len(cluster) >= 3:
-                crowd_detected = True
-                status = "WAJAR" if len(cluster) == 3 else "KERUMUNAN"
-                color = (0, 255, 0) if status == "WAJAR" else (0, 0, 255)
-                
-                # Tandai rata-rata posisi cluster
-                cx = int(np.mean([centers[k][0] for k in cluster]))
-                cy = int(np.mean([centers[k][1] for k in cluster]))
-                cv2.putText(annotated, f"{status} ({len(cluster)})", 
-                            (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
-                
-                # Log kerumunan
-                log_info(f"[CROWD] {status} detected with {len(cluster)} people at position ({cx}, {cy})", 
-                         log_file, print_to_console=False)
-        
-        if crowd_detected:
-            log_info(f"[CROWD] Crowd analysis completed - {len(clusters)} clusters found", 
-                     log_file, print_to_console=False)
 
     def process_detection(self, track_id, class_name, x1, y1, x2, y2, frame, current_time, timestamp,
                           img_w, img_h, id_info, cooldown, output_base, detection_type, log_file, conf=None, scale=2.5):
@@ -459,7 +416,6 @@ class CheatingDetectionPipeline:
                 info['last_saved'] = current_time
                 # Log to CSV
                 log_detection_to_csv(track_id, filename, class_name, info['last_conf'], current_time)
-                log_info(f"[DETECTION] Saved {detection_type} detection: {filename}", log_file, print_to_console=False)
 
     def display_results(self, annotated_frame):
         """Display annotated frame with additional information"""
