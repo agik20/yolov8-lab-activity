@@ -62,8 +62,8 @@ This repository contains an **AI-powered surveillance system** designed to monit
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/username/lab-surveillance-detection.git
-cd lab-surveillance-detection
+git clone https://github.com/agik20/yolov8-lab-activity
+cd yolov8-lab-activity
 ```
 
 ### 2. Python Environment
@@ -123,6 +123,7 @@ node server.js
 Cropped Evidence Images
 
 backend/inference/output/pose/sleep/3_sleep_0.92_153045.jpg
+
 backend/inference/output/object/smartphone/5_smartphone_0.88_153210.jpg
 
 
