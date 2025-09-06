@@ -6,21 +6,14 @@ This repository contains an **AI-powered surveillance system** designed to monit
 
 ## 🔑 Key Features
 
-Pose-Based Activity Recognition: Detects student behaviors such as normal posture, sleeping, and eating or drinking during exams or lab sessions.
-
-Object Detection: Identifies prohibited items, including smartphones and calculators, with confidence scoring and evidence capture.
-
-Crowd Detection: Monitors student proximity and flags gatherings of three or more individuals as potential misconduct.
-
-Automated Evidence Logging: Saves cropped images of detected activities and objects with structured filenames (id_class_conf_timestamp).
-
-CSV Violation Records: Automatically logs detection events into a timestamped CSV file for auditing and reporting.
-
-Real-Time Video Streaming: Streams annotated video feeds via a Flask web application, accessible through a standard web browser.
-
-Configurable Parameters: Flexible settings for detection thresholds, cooldown intervals, crop scaling, and output directories through a centralized configuration class.
-
-Scalable Integration: Supports Node.js services with WebSocket and MariaDB integration for database-driven logging and live system updates.
+1. Pose-Based Activity Recognition: Detects student behaviors such as normal posture, sleeping, and eating or drinking during exams or lab sessions.
+2. Object Detection: Identifies prohibited items, including smartphones and calculators, with confidence scoring and evidence capture.
+3. Crowd Detection: Monitors student proximity and flags gatherings of three or more individuals as potential misconduct.
+4. Automated Evidence Logging: Saves cropped images of detected activities and objects with structured filenames (id_class_conf_timestamp).
+5. CSV Violation Records: Automatically logs detection events into a timestamped CSV file for auditing and reporting.
+6. Real-Time Video Streaming: Streams annotated video feeds via a Flask web application, accessible through a standard web browser.
+7. Configurable Parameters: Flexible settings for detection thresholds, cooldown intervals, crop scaling, and output directories through a centralized configuration class.
+8. Scalable Integration: Supports Node.js services with WebSocket and MariaDB integration for database-driven logging and live system updates.
 
 ---
 
